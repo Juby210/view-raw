@@ -1,0 +1,7 @@
+.vrmodal {
+    min-height: 0;
+}
+.vrmodal pre {
+    max-width: 100%;
+    padding-bottom: 15px;
+}
