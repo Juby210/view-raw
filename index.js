@@ -16,6 +16,7 @@ module.exports = class ViewRaw extends Plugin {
             React.createElement(Button, {
                 name: 'View raw',
                 seperate: true,
+                disabled: res.props.message.content == '',
                 onClick: () => open(() => React.createElement(Modal, { message: res.props.message }))
             }), res
         ])
