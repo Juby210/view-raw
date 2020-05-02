@@ -12,14 +12,18 @@ module.exports = class ViewRaw extends Plugin {
         this.loadCSS(resolve(__dirname, 'style.css'))
 
         const MessageDeveloperModeGroup = await getModuleByDisplayName('FluxContainer(MessageDeveloperModeGroup)')
-        inject('viewraw', MessageDeveloperModeGroup.prototype, 'render', (_, res) => [
-            React.createElement(Button, {
-                name: 'View raw',
-                seperate: true,
-                disabled: res.props.message.content == '',
-                onClick: () => open(() => React.createElement(Modal, { message: res.props.message }))
-            }), res
-        ])
+        inject('viewraw', MessageDeveloperModeGroup.prototype, 'render', (_, res) => {
+            const r = [
+                React.createElement(Button, {
+                    name: 'View raw',
+                    separate: true,
+                    disabled: res.props.message.content == '',
+                    onClick: () => open(() => React.createElement(Modal, { message: res.props.message }))
+                }), res
+            ]
+            r.props = res.props
+            return r
+        })
     }
 
     pluginWillUnload() {
