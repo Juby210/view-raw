@@ -1,8 +1,8 @@
 const { resolve } = require('path')
 const { Plugin } = require('powercord/entities')
-const { getModuleByDisplayName, React } = require('powercord/webpack')
+const { findInReactTree } = require('powercord/util')
+const { getModule, React } = require('powercord/webpack')
 const { inject, uninject } = require('powercord/injector')
-const { Button } = require('powercord/components/ContextMenu')
 const { open } = require('powercord/modal')
 
 const Modal = require('./Modal')
@@ -11,22 +11,24 @@ module.exports = class ViewRaw extends Plugin {
     async startPlugin() {
         this.loadCSS(resolve(__dirname, 'style.css'))
 
-        const MessageDeveloperModeGroup = await getModuleByDisplayName('FluxContainer(MessageDeveloperModeGroup)')
-        inject('viewraw', MessageDeveloperModeGroup.prototype, 'render', (_, res) => {
-            const r = [
-                React.createElement(Button, {
-                    name: 'View raw',
-                    separate: true,
-                    disabled: res.props.message.content == '',
-                    onClick: () => open(() => React.createElement(Modal, { message: res.props.message }))
-                }), res
-            ]
-            r.props = res.props
-            return r
+        const Menu = await getModule(['MenuGroup', 'MenuItem'])
+        const MessageContextMenu = await getModule(m => m.default && m.default.displayName == 'MessageContextMenu')
+
+        inject('view-raw', MessageContextMenu, 'default', (args, res) => {
+            if (!findInReactTree(res, c => c.props && c.props.id == 'view-raw')) res.props.children.splice(4, 0,
+                React.createElement(Menu.MenuGroup, null, React.createElement(Menu.MenuItem, {
+                    action: () => open(() => React.createElement(Modal, { message: args[0].message })),
+                    id: 'view-raw',
+                    label: 'View raw'
+                })
+            ))
+
+            return res
         })
+        MessageContextMenu.default.displayName = 'MessageContextMenu'
     }
 
     pluginWillUnload() {
-        uninject('viewraw')
+        uninject('view-raw')
     }
 }
