@@ -1,4 +1,3 @@
-const { resolve } = require('path')
 const { Plugin } = require('powercord/entities')
 const { findInReactTree } = require('powercord/util')
 const { getModule, React } = require('powercord/webpack')
@@ -9,7 +8,7 @@ const Modal = require('./Modal')
 
 module.exports = class ViewRaw extends Plugin {
     async startPlugin() {
-        this.loadCSS(resolve(__dirname, 'style.css'))
+        this.loadStylesheet('style.css')
 
         const Menu = await getModule(['MenuGroup', 'MenuItem'])
         const MessageContextMenu = await getModule(m => m.default && m.default.displayName == 'MessageContextMenu')
