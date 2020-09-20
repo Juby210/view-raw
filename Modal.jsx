@@ -22,7 +22,7 @@ function parseContent (content) {
         } else {
             const props = res.props.children.props.children.props.children[1].props
             if (Array.isArray(props.children)) {
-                props.children = props.children.forEach(c => {
+                props.children.forEach(c => {
                     c.props.children[1].props.children = strToReact(c.props.children[1].props.children)
                 })
             } else {
