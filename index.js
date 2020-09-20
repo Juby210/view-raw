@@ -19,7 +19,7 @@ module.exports = class ViewRaw extends Plugin {
                 React.createElement(Menu.MenuGroup, null, React.createElement(Menu.MenuItem, {
                     action: () => open(() => React.createElement(Modal, { message: args[0].message })),
                     id: 'view-raw',
-                    label: 'View raw'
+                    label: 'View Raw'
                 })
             ))
 
