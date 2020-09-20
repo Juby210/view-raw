@@ -8,3 +8,9 @@
 .vrmodal .defaultMarginh3-2iptLs{
     margin-bottom: 0;
 }
+
+.vrmodal .zws {
+    width: 1px;
+    display: inline-block;
+    background-color: #f00;
+}
