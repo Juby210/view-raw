@@ -10,9 +10,7 @@
 }
 
 .vrmodal .zws {
-    position: relative;
-    display: inline-block;
     width: 1px;
-    margin-bottom: -5px;
+    display: inline-block;
     background-color: #f00;
 }
