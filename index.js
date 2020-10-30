@@ -17,7 +17,7 @@ module.exports = class ViewRaw extends Plugin {
             if (!findInReactTree(res, c => c.props && c.props.id == 'view-raw')) res.props.children.splice(4, 0,
                 React.createElement(Menu.MenuGroup, null, React.createElement(Menu.MenuItem, {
                     action: () => open(() => React.createElement(Modal, { message: args[0].message })),
-                    disabled: args[0].message.content == '',
+                    disabled: !args[0].message.content && !args[0].message.embeds.length,
                     id: 'view-raw',
                     label: 'View Raw'
                 })
