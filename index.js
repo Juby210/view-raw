@@ -25,11 +25,33 @@ module.exports = class ViewRaw extends Plugin {
 			const props = findInReactTree(res, (r) => r?.message);
 			if (!props) return res;
 
+			// Hacky clone. All strings so who cares.
+			let message = JSON.parse(
+				JSON.stringify(
+					MessageC ? new MessageC(props.message) : props.message
+				)
+			);
+			// Censor personal data.
+			for (const data in message.author) {
+				if (
+					typeof message.author[data] !== "function" &&
+					[
+						"id",
+						"username",
+						"usernameNormalized",
+						"discriminator",
+						"avatar",
+						"bot",
+						"system",
+					].indexOf(data) === -1
+				) {
+					delete message.author[data];
+				}
+			}
+
 			res.props.children.unshift(
 				React.createElement(ViewRawButton, {
-					message: MessageC
-						? new MessageC(props.message)
-						: props.message,
+					message,
 				})
 			);
 			return res;
