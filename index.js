@@ -43,6 +43,7 @@ module.exports = class ViewRaw extends Plugin {
 						"avatar",
 						"bot",
 						"system",
+						"publicFlags",
 					].indexOf(data) === -1
 				) {
 					delete message.author[data];
