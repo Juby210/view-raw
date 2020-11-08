@@ -140,6 +140,4 @@ class ViewRawButton extends React.PureComponent {
 }
 
 // Might as well.
-module.exports = KLibrary?.Tools?.ReactTools?.WrapBoundary
-	? KLibrary.Tools.ReactTools.WrapBoundary(ViewRawButton)
-	: ViewRawButton;
+module.exports = KLibrary?.Tools?.ReactTools?.WrapBoundary(ViewRawButton) || ViewRawButton;
