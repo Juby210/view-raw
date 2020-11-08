@@ -98,4 +98,4 @@ class ViewRawModal extends React.PureComponent {
 }
 
 // Might as well.
-module.exports = KLibrary?.Tools?.ReactTools?.WrapBoundary(ViewRawModal) || ViewRawModal;
+module.exports = KLibrary?.Tools?.ReactTools?.WrapBoundary?.(ViewRawModal) || ViewRawModal;
