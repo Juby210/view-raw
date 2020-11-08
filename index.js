@@ -1,34 +1,44 @@
-const { Plugin } = require('powercord/entities')
-const { findInReactTree } = require('powercord/util')
-const { getModule, React } = require('powercord/webpack')
-const { inject, uninject } = require('powercord/injector')
-const { open } = require('powercord/modal')
+const {
+	entities: { Plugin },
+	util: { findInReactTree },
+	injector: { inject, uninject },
+	webpack: { React, getModule },
+} = require("powercord");
 
-const Modal = require('./Modal')
+const MiniPopover = getModule(
+	(m) => m?.default?.displayName === "MiniPopover",
+	false
+);
+
+const ViewRawButton = require("./components/ViewRawButton");
+
+const MessageC = getModule(
+	(m) => m?.prototype?.getReaction && m?.prototype?.isSystemDM,
+	false
+);
 
 module.exports = class ViewRaw extends Plugin {
-    async startPlugin() {
-        this.loadStylesheet('style.css')
+	async startPlugin() {
+		this.loadStylesheet("style.css");
 
-        const Menu = await getModule(['MenuGroup', 'MenuItem'])
-        const MessageContextMenu = await getModule(m => m.default && m.default.displayName == 'MessageContextMenu')
+		inject("view-raw-button", MiniPopover, "default", (args, res) => {
+			const props = findInReactTree(res, (r) => r?.message);
+			if (!props) return res;
 
-        inject('view-raw', MessageContextMenu, 'default', (args, res) => {
-            if (!findInReactTree(res, c => c.props && c.props.id == 'view-raw')) res.props.children.splice(4, 0,
-                React.createElement(Menu.MenuGroup, null, React.createElement(Menu.MenuItem, {
-                    action: () => open(() => React.createElement(Modal, { message: args[0].message })),
-                    disabled: !args[0].message.content && !args[0].message.embeds.length,
-                    id: 'view-raw',
-                    label: 'View Raw'
-                })
-            ))
+			res.props.children.unshift(
+				React.createElement(ViewRawButton, {
+					message: MessageC
+						? new MessageC(props.message)
+						: props.message,
+				})
+			);
+			return res;
+		});
 
-            return res
-        })
-        MessageContextMenu.default.displayName = 'MessageContextMenu'
-    }
+		MiniPopover.default.displayName = "MiniPopover";
+	}
 
-    pluginWillUnload() {
-        uninject('view-raw')
-    }
-}
+	pluginWillUnload() {
+		uninject("view-raw-button");
+	}
+};
