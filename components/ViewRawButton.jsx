@@ -4,26 +4,79 @@ const {
 } = require("powercord");
 
 const classes = getModule(["icon", "isHeader"], false);
+
+const { clipboard } = getModule(["clipboard"], false);
+
 const { Button } = getModule(
 	(m) => m?.default?.displayName === "MiniPopover",
 	false
 );
-
 const Tooltip = getModuleByDisplayName("Tooltip", false);
 
 const ViewRawModal = require("./ViewRawModal");
 
+let clicks = [];
+let timeout;
+
 class ViewRawButton extends React.PureComponent {
+	constructor(props) {
+		super(props);
+
+		this.state = {
+			copied: false,
+		};
+	}
+
+	clickHandler(event) {
+		event.preventDefault();
+
+		const { message } = this.props;
+
+		clicks.push(new Date().getTime());
+		window.clearTimeout(timeout);
+		timeout = window.setTimeout(() => {
+			if (
+				clicks.length > 1 &&
+				clicks[clicks.length - 1] - clicks[clicks.length - 2] < 250
+			) {
+				clipboard.copy(JSON.stringify(message, null, "\t"));
+				this.setCopied();
+			} else {
+				open(() => <ViewRawModal message={message} />);
+			}
+		}, 250);
+	}
+
+	setCopied() {
+		this.setState({ copied: true });
+		setTimeout(() => {
+			this.setState({
+				copied: false,
+			});
+		}, 2e3);
+	}
+
 	render() {
+		const { message } = this.props;
 		return (
-			<Tooltip color="black" postion="top" text="View Raw">
+			<Tooltip
+				color={this.state.copied ? "green" : "black"}
+				postion="top"
+				text={
+					this.state.copied
+						? "Copied!"
+						: "(L) View Raw (R) Copy Raw (2xL) Copy Raw Data"
+				}
+			>
 				{({ onMouseLeave, onMouseEnter }) => (
 					<Button
 						className={`view-raw-button`}
-						onClick={async () => {
-							open(() => (
-								<ViewRawModal message={this.props.message} />
-							));
+						onClick={(e) => {
+							this.clickHandler(e);
+						}}
+						onContextMenu={() => {
+							clipboard.copy(message.content);
+							this.setCopied();
 						}}
 						onMouseEnter={onMouseEnter}
 						onMouseLeave={onMouseLeave}
