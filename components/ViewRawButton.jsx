@@ -33,8 +33,8 @@ class ViewRawButton extends React.PureComponent {
 		const { message } = this.props;
 
 		clicks.push(new Date().getTime());
-		window.clearTimeout(timeout);
-		timeout = window.setTimeout(() => {
+		clearTimeout(timeout);
+		timeout = setTimeout(() => {
 			if (
 				clicks.length > 1 &&
 				clicks[clicks.length - 1] - clicks[clicks.length - 2] < 250
