@@ -40,15 +40,15 @@ class ViewRawButton extends React.PureComponent {
 				clicks[clicks.length - 1] - clicks[clicks.length - 2] < 250
 			) {
 				clipboard.copy(JSON.stringify(message, null, "\t"));
-				this.setCopied();
+				this.setCopied("Raw Data");
 			} else {
 				open(() => <ViewRawModal message={message} />);
 			}
 		}, 250);
 	}
 
-	setCopied() {
-		this.setState({ copied: true });
+	setCopied(type) {
+		this.setState({ copied: type });
 		setTimeout(() => {
 			this.setState({
 				copied: false,
@@ -64,7 +64,7 @@ class ViewRawButton extends React.PureComponent {
 				postion="top"
 				text={
 					this.state.copied
-						? "Copied!"
+						? `Copied ${this.state.copied}!`
 						: "(L) View Raw (R) Copy Raw (2xL) Copy Raw Data"
 				}
 			>
@@ -76,7 +76,7 @@ class ViewRawButton extends React.PureComponent {
 						}}
 						onContextMenu={() => {
 							clipboard.copy(message.content);
-							this.setCopied();
+							this.setCopied("Raw");
 						}}
 						onMouseEnter={onMouseEnter}
 						onMouseLeave={onMouseLeave}
