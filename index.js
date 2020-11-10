@@ -1,67 +1,46 @@
-const {
-	entities: { Plugin },
-	util: { findInReactTree },
-	injector: { inject, uninject },
-	webpack: { React, getModule },
-} = require("powercord");
+const { Plugin } = require('powercord/entities')
+const { findInReactTree } = require('powercord/util')
+const { getModule, React } = require('powercord/webpack')
+const { inject, uninject } = require('powercord/injector')
 
-const MiniPopover = getModule(
-	(m) => m?.default?.displayName === "MiniPopover",
-	false
-);
-
-const ViewRawButton = require("./components/ViewRawButton");
-
-const MessageC = getModule(
-	(m) => m?.prototype?.getReaction && m?.prototype?.isSystemDM,
-	false
-);
+const ViewRawButton = require('./components/ViewRawButton')
 
 module.exports = class ViewRaw extends Plugin {
 	async startPlugin() {
-		this.loadStylesheet("style.css");
+		this.loadStylesheet('style.css')
 
-		inject("view-raw-button", MiniPopover, "default", (args, res) => {
-			const props = findInReactTree(res, (r) => r?.message);
-			if (!props) return res;
+		const MiniPopover = await getModule(m => m?.default?.displayName === 'MiniPopover')
+		inject('view-raw-button', MiniPopover, 'default', (args, res) => {
+			const props = findInReactTree(res, (r) => r?.message)
+			if (!props) return res
 
-			// Hacky clone. All strings so who cares.
-			let message = JSON.parse(
-				JSON.stringify(
-					MessageC ? new MessageC(props.message) : props.message
-				)
-			);
+			const message = _.cloneDeep(props.message)
 			// Censor personal data.
 			for (const data in message.author) {
 				if (
-					typeof message.author[data] !== "function" &&
+					typeof message.author[data] !== 'function' &&
 					[
-						"id",
-						"username",
-						"usernameNormalized",
-						"discriminator",
-						"avatar",
-						"bot",
-						"system",
-						"publicFlags",
+						'id',
+						'username',
+						'usernameNormalized',
+						'discriminator',
+						'avatar',
+						'bot',
+						'system',
+						'publicFlags',
 					].indexOf(data) === -1
-				) {
-					delete message.author[data];
-				}
+				) delete message.author[data]
 			}
 
 			res.props.children.unshift(
-				React.createElement(ViewRawButton, {
-					message,
-				})
-			);
-			return res;
-		});
-
-		MiniPopover.default.displayName = "MiniPopover";
+				React.createElement(ViewRawButton, { message })
+			)
+			return res
+		})
+		MiniPopover.default.displayName = 'MiniPopover'
 	}
 
 	pluginWillUnload() {
-		uninject("view-raw-button");
+		uninject('view-raw-button')
 	}
-};
+}

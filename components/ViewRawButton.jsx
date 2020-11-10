@@ -1,30 +1,20 @@
-const {
-	modal: { open },
-	webpack: { React, getModule, getModuleByDisplayName },
-} = require("powercord");
+const { React, getModule, getModuleByDisplayName } = require('powercord/webpack')
+const { open } = require('powercord/modal')
 
-const classes = getModule(["icon", "isHeader"], false);
+const classes = getModule(['icon', 'isHeader'], false)
+const { clipboard } = getModule(['clipboard'], false)
+const Tooltip = getModuleByDisplayName('Tooltip', false)
 
-const { clipboard } = getModule(["clipboard"], false);
+const ViewRawModal = require('./ViewRawModal')
 
-const { Button } = getModule(
-	(m) => m?.default?.displayName === "MiniPopover",
-	false
-);
-const Tooltip = getModuleByDisplayName("Tooltip", false);
-
-const ViewRawModal = require("./ViewRawModal");
-
-let clicks = [];
-let timeout;
+let clicks = []
+let timeout
 
 class ViewRawButton extends React.PureComponent {
 	constructor(props) {
-		super(props);
+		super(props)
 
-		this.state = {
-			copied: false,
-		};
+		this.state = { copied: false }
 	}
 
 	clickHandler(event) {
@@ -48,16 +38,15 @@ class ViewRawButton extends React.PureComponent {
 	}
 
 	setCopied(type) {
-		this.setState({ copied: type });
-		setTimeout(() => {
-			this.setState({
-				copied: false,
-			});
-		}, 2e3);
+		this.setState({ copied: type })
+		setTimeout(() => this.setState({
+			copied: false
+		}), 2e3)
 	}
 
 	render() {
-		const { message } = this.props;
+		const { Button } = getModule(m => m?.default?.displayName === 'MiniPopover', false)
+		const { message } = this.props
 		return (
 			<Tooltip
 				color={this.state.copied ? "green" : "black"}
