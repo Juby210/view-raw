@@ -2,8 +2,9 @@ const { React, getModule, getModuleByDisplayName } = require('powercord/webpack'
 const { open } = require('powercord/modal')
 
 const classes = getModule(['icon', 'isHeader'], false)
-const { clipboard } = getModule(['clipboard'], false)
+const { clipboard } = getModule(['clipboard'], false) || {}
 const Tooltip = getModuleByDisplayName('Tooltip', false)
+const { Button } = getModule(m => m?.default?.displayName === 'MiniPopover', false) || {}
 
 const ViewRawModal = require('./ViewRawModal')
 
@@ -18,23 +19,21 @@ class ViewRawButton extends React.PureComponent {
 	}
 
 	clickHandler(event) {
-		event.preventDefault();
+		event.preventDefault()
 
-		const { message } = this.props;
+		const { message } = this.props
 
-		clicks.push(new Date().getTime());
-		clearTimeout(timeout);
+		clicks.push(new Date().getTime())
+		clearTimeout(timeout)
 		timeout = setTimeout(() => {
 			if (
 				clicks.length > 1 &&
 				clicks[clicks.length - 1] - clicks[clicks.length - 2] < 250
 			) {
-				clipboard.copy(JSON.stringify(message, null, "\t"));
-				this.setCopied("Raw Data");
-			} else {
-				open(() => <ViewRawModal message={message} />);
-			}
-		}, 250);
+				clipboard.copy(JSON.stringify(message, null, '\t'))
+				this.setCopied('Raw Data')
+			} else open(() => <ViewRawModal message={message} />)
+		}, 250)
 	}
 
 	setCopied(type) {
@@ -45,7 +44,6 @@ class ViewRawButton extends React.PureComponent {
 	}
 
 	render() {
-		const { Button } = getModule(m => m?.default?.displayName === 'MiniPopover', false)
 		const { message } = this.props
 		return (
 			<Tooltip
@@ -129,4 +127,4 @@ class ViewRawButton extends React.PureComponent {
 }
 
 // Might as well.
-module.exports = window.KLibrary?.Tools?.ReactTools?.WrapBoundary?.(ViewRawButton) || ViewRawButton;
+module.exports = window.KLibrary?.Tools?.ReactTools?.WrapBoundary?.(ViewRawButton) || ViewRawButton
