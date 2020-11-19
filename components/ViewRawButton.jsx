@@ -32,7 +32,7 @@ class ViewRawButton extends React.PureComponent {
 			) {
 				clipboard.copy(JSON.stringify(message, null, '\t'))
 				this.setCopied('Raw Data')
-			} else open(() => <ViewRawModal message={message} />)
+			} else open(() => <ViewRawModal message={message} allRawData={this.props.allRawData} />)
 		}, 250)
 	}
 
