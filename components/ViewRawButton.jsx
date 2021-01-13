@@ -1,50 +1,111 @@
-const { React, getModule, getModuleByDisplayName } = require('powercord/webpack')
-const { open } = require('powercord/modal')
+const {
+	React,
+	getModule,
+	getModuleByDisplayName,
+} = require("powercord/webpack");
+const { open } = require("powercord/modal");
 
-const classes = getModule(['icon', 'isHeader'], false)
-const { clipboard } = getModule(['clipboard'], false) || {}
-const Tooltip = getModuleByDisplayName('Tooltip', false)
-const { Button } = getModule(m => m?.default?.displayName === 'MiniPopover', false) || {}
+const classes = getModule(["icon", "isHeader"], false);
+const { clipboard } = getModule(["clipboard"], false) || {};
+const Tooltip = getModuleByDisplayName("Tooltip", false);
+const { Button } =
+	getModule((m) => m?.default?.displayName === "MiniPopover", false) || {};
 
-const ViewRawModal = require('./ViewRawModal')
+const ViewRawModal = require("./ViewRawModal");
 
-let clicks = []
-let timeout
+let clicks = [];
+let timeout;
 
 class ViewRawButton extends React.PureComponent {
 	constructor(props) {
-		super(props)
+		super(props);
 
-		this.state = { copied: false }
+		this.state = { copied: false, message: this.patchMessage(props.message) };
+	}
+
+	patchMessage(msg) {
+		const message = _.cloneDeep(msg);
+		// Censor personal data.
+		for (const data in message.author) {
+			if (
+				typeof message.author[data] !== "function" &&
+				[
+					"id",
+					"username",
+					"usernameNormalized",
+					"discriminator",
+					"avatar",
+					"bot",
+					"system",
+					"publicFlags",
+				].indexOf(data) === -1
+			)
+				delete message.author[data];
+		}
+		// JSONify embed keys. Making easier to use them in e.g. bots.
+		message.embeds = message.embeds.map((e) => {
+			delete e.id;
+			this.jsonifyEmbedKeys(e);
+			for (const k of Object.keys(e).filter((k) => typeof e[k] == "object")) {
+				if (!Array.isArray(e[k])) this.jsonifyEmbedKeys(e[k]);
+				else
+					e[k].map((el) =>
+						typeof el === "object" && !Array.isArray(el)
+							? this.jsonifyEmbedKeys(el)
+							: el
+					);
+			}
+			return e;
+		});
+		return message;
+	}
+	jsonifyEmbedKeys(e) {
+		for (const k of Object.keys(e)) {
+			const newKey = k
+				.replace("URL", "_url")
+				.replace(/[A-Z]/g, (l) => "_" + l.toLowerCase())
+				.replace("raw_", "");
+			if (newKey === k) continue;
+			e[newKey] = e[k];
+			delete e[k];
+		}
+		return e;
 	}
 
 	clickHandler(event) {
-		event.preventDefault()
+		event.preventDefault();
 
-		const { message } = this.props
+		const { message } = this.state;
 
-		clicks.push(new Date().getTime())
-		clearTimeout(timeout)
+		clicks.push(new Date().getTime());
+		clearTimeout(timeout);
 		timeout = setTimeout(() => {
 			if (
 				clicks.length > 1 &&
 				clicks[clicks.length - 1] - clicks[clicks.length - 2] < 250
 			) {
-				clipboard.copy(JSON.stringify(message, null, '\t'))
-				this.setCopied('Raw Data')
-			} else open(() => <ViewRawModal message={message} allRawData={this.props.allRawData} />)
-		}, 250)
+				clipboard.copy(JSON.stringify(message, null, "\t"));
+				this.setCopied("Raw Data");
+			} else
+				open(() => (
+					<ViewRawModal message={message} allRawData={this.props.allRawData} />
+				));
+		}, 250);
 	}
 
 	setCopied(type) {
-		this.setState({ copied: type })
-		setTimeout(() => this.setState({
-			copied: false
-		}), 2e3)
+		this.setState({ copied: type });
+		setTimeout(
+			() =>
+				this.setState({
+					copied: false,
+				}),
+			2e3
+		);
 	}
 
 	render() {
-		const { message } = this.props
+		const { message } = this.props;
 		return (
 			<Tooltip
 				color={this.state.copied ? "green" : "black"}
@@ -127,4 +188,6 @@ class ViewRawButton extends React.PureComponent {
 }
 
 // Might as well.
-module.exports = window.KLibrary?.Tools?.ReactTools?.WrapBoundary?.(ViewRawButton) || ViewRawButton
+module.exports =
+	window.KLibrary?.Tools?.ReactTools?.WrapBoundary?.(ViewRawButton) ||
+	ViewRawButton;
