@@ -72,7 +72,6 @@ module.exports = class ViewRaw extends (
 			"default",
 			(args, res) => {
 				if (!args[0]?.message || !res?.props?.children) return res;
-				const message = this.patchMessage(args[0].message);
 
 				res.props.children.splice(
 					4,
@@ -85,15 +84,15 @@ module.exports = class ViewRaw extends (
 								open(() =>
 									React.createElement(Modal, {
 										allRawData: this.settings.get("allRawData"),
-										message,
+										message: args[0].message,
 									})
 								),
 							id: "view-raw",
 							label: "View Raw",
 						}),
 						React.createElement(MenuItem, {
-							action: () => clipboard.copy(message.content),
-							disabled: !message.content,
+							action: () => clipboard.copy(args[0].message.content),
+							disabled: !args[0].message.content,
 							id: "copy-raw",
 							label: "Copy Raw",
 						})
