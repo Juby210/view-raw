@@ -86,10 +86,19 @@ class ViewRawButton extends React.PureComponent {
 			) {
 				clipboard.copy(JSON.stringify(message, null, "\t"));
 				this.setCopied("Raw Data");
-			} else
+			} else {
+				if (message.attachments.length > 0) {
+					if (message.content.length < 1) message.content += message.attachments.map(x => x.url).join("\n")
+					else if (message.attachments.length > 0 && message.content.length > 0)
+						message.attachments.map(x => x.url).forEach(x => {
+							if (!message.content.includes(x)) message.content += `\n${x}`
+						})
+				}
+
 				open(() => (
 					<ViewRawModal message={message} allRawData={this.props.allRawData} />
 				));
+			}
 		}, 250);
 	}
 
@@ -108,11 +117,11 @@ class ViewRawButton extends React.PureComponent {
 		const { message } = this.props;
 		return (
 			<Tooltip
-				color={this.state.copied ? "green" : "black"}
+				color={this.state.copied ? this.state.copied == "error" ? "red" : "green" : "black"}
 				postion="top"
 				text={
 					this.state.copied
-						? `Copied ${this.state.copied}!`
+						? this.state.copied == "error" ? "Unknown Type" : `Copied ${this.state.copied}!`
 						: "(L) View Raw (R) Copy Raw (2xL) Copy Raw Data"
 				}
 			>
@@ -123,8 +132,18 @@ class ViewRawButton extends React.PureComponent {
 							this.clickHandler(e);
 						}}
 						onContextMenu={() => {
-							clipboard.copy(message.content);
-							this.setCopied("Raw");
+							if (message.content.length > 0) {
+								clipboard.copy(message.attachments.length > 0 ? message.content + "\n" + message?.attachments.map(x => x.url).join("\n") : message.content);
+								this.setCopied("Raw");
+							} else if (message.attachments.length > 0) {
+								clipboard.copy(message?.attachments.map(x => x.url).join("\n"));
+								this.setCopied("Raw");
+							} else if (message.embeds.length > 0) {
+								clipboard.copy(JSON.stringify(message.embeds, null, '\t'));
+								this.setCopied("Embed Data");
+							} else {
+								this.setCopied("error");
+							}
 						}}
 						onMouseEnter={onMouseEnter}
 						onMouseLeave={onMouseLeave}
