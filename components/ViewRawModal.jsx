@@ -21,12 +21,12 @@ function parseContent(content) {
 	const ogRender = res.props.render
 	res.props.render = (codeblock) => {
 		const res = ogRender(codeblock)
-		if (typeof res.props.children.props.children === 'string') {
-			res.props.children.props.children = strToReact(
-				res.props.children.props.children
-			)
+		const children = res?.props?.children?.props?.children
+		if (!children) return res
+		if (typeof children === 'string') {
+			children = strToReact(children)
 		} else {
-			const props = res.props.children.props.children.props.children[1].props
+			const props = children.props.children[1].props
 			if (Array.isArray(props.children)) {
 				props.children.forEach((c) => {
 					c.props.children[1].props.children = strToReact(
