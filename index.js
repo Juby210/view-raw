@@ -1,16 +1,22 @@
 const { Plugin } = require("powercord/entities");
 const { open } = require("powercord/modal");
 const { findInReactTree } = require("powercord/util");
-const { getModule, React } = require("powercord/webpack");
+const { getModule, getModuleByDisplayName, React } = require("powercord/webpack");
 const { inject, uninject } = require("powercord/injector");
+
+const { clipboard } = require('electron');
 
 const Settings = require("./components/Settings");
 const ViewRawButton = require("./components/ViewRawButton");
 const Modal = require("./components/ViewRawModal");
 
-module.exports = class ViewRaw extends (
-	Plugin
-) {
+module.exports = class ViewRaw extends Plugin {
+	constructor() {
+		super();
+		this.injectMessageContextMenu = this.injectMessageContextMenu.bind(this);
+		this.injectContextMenus = {};
+	}
+
 	startPlugin() {
 		powercord.api.settings.registerSettings(this.entityID, {
 			category: this.entityID,
@@ -23,6 +29,7 @@ module.exports = class ViewRaw extends (
 		});
 		this.loadStylesheet("style.css");
 
+		this.injectOpenContextMenuLazy();
 		this.addButtons();
 	}
 
@@ -32,6 +39,8 @@ module.exports = class ViewRaw extends (
 		document
 			.querySelectorAll(".view-raw-button")
 			.forEach((e) => (e.style.display = "none"));
+
+		uninject("view-raw-context-lazy-menu");
 	}
 
 	async addButtons(repatch, unpatch) {
@@ -61,10 +70,14 @@ module.exports = class ViewRaw extends (
 		}
 
 		if (!this.settings.get("contextMenu", true)) return;
-		const { clipboard } = await getModule(["clipboard"]);
-		const { MenuGroup, MenuItem } = await getModule(["MenuGroup", "MenuItem"]);
-		const MessageContextMenu = await getModule(
-			(m) => m?.default?.displayName === "MessageContextMenu"
+
+		this.injectContextMenus.MessageContextMenu = this.injectMessageContextMenu;
+	}
+
+	injectMessageContextMenu() {
+		const { MenuGroup, MenuItem } = getModule(["MenuGroup", "MenuItem"], false);
+		const MessageContextMenu = getModule(
+			(m) => m?.default?.displayName === "MessageContextMenu", false
 		);
 		inject(
 			"view-raw-contextmenu",
@@ -102,5 +115,35 @@ module.exports = class ViewRaw extends (
 			}
 		);
 		MessageContextMenu.default.displayName = "MessageContextMenu";
+	}
+
+	injectOpenContextMenuLazy () {
+		const module = getModule([ 'openContextMenuLazy' ], false);
+
+		inject('view-raw-context-lazy-menu', module, 'openContextMenuLazy', ([ event, lazyRender, params ]) => {
+			const warpLazyRender = async () => {
+				const render = await lazyRender(event);
+
+				return (config) => {
+					const menu = render(config);
+					const CMName = menu?.type?.displayName;
+
+					if (CMName) {
+						const moduleByDisplayName = getModuleByDisplayName(CMName, false);
+
+						if (CMName in this.injectContextMenus) {
+							this.injectContextMenus[CMName]();
+							delete this.injectContextMenus[CMName];
+						}
+						if (moduleByDisplayName !== null) {
+							menu.type = moduleByDisplayName;
+						}
+					}
+					return menu;
+				};
+			};
+
+			return [ event, warpLazyRender, params ];
+		}, true);
 	}
 };
